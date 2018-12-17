@@ -1,0 +1,62 @@
+\documentclass{article}
+    \usepackage{amsthm, amsmath}
+    \usepackage{xeCJK}
+    \usepackage{algorithm}
+    \usepackage{algorithmicx}
+    \usepackage{algpseudocode}
+    \usepackage{hyperref}
+    \usepackage{listings}
+    
+    \title{编译原理: PA3}
+    \author{娄晨耀, 2016011343}
+    \date{}
+    
+    
+    \theoremstyle{plain}
+    \newtheorem{thm}{Theorem}
+    
+    \theoremstyle{definition}
+    \newtheorem{alg}{Algorithm}
+    
+    
+    \begin{document}
+    \maketitle
+
+    \section{类的浅复制的支持}
+
+    我通过在Trasnlator 里面新建一个函数genShallowCopy(Temp src) 来支持浅拷贝。这个函数会生成一段tac码，含义是新建一块和之前一样大的内存，然后逐个WORD拷贝，并把新建的内存地址返回。
+
+    \section{sealed 的支持}
+
+    sealed 是在编译时检查，不需要生成tac代码。
+
+    \section{支持串行条件卫士}
+
+    由于其语义相当于写多个if。于是实现起来和if一样，只是需要一个循环对每个条件都生成一下对应的tac代码即可。
+    
+    \section{支持简单的类型推导}
+
+    这里其实在TypeCheck 阶段就可以推到出来类型。于是这里需要做的工作相当于VarDef + Assign。
+
+    \section{数组操作}
+    \subsection{数组初始化常量表达式}
+    
+    我这里直接利用了之前的genNewArray。之前genNewArray的实现是给全部值赋成0，我扩展了一下这个函数使得初始值可以传入。
+    
+    \subsection{数组下标动态访问表达式}
+
+    这里判断一下其长度，然后直接选择是访问数字还是使用默认值即可。
+
+    \subsection{数组迭代语句}
+
+    这里像for一样，创建几个标签用来做控制。不同的是这里控制逻辑有点复杂，需要自己维护一下当前循环到数组的第几个元素了，同时也要判断一下while的条件是不是满足。
+
+    支持var的话同之前一样，其在TypeCheck 阶段已经判断出其类型，不需要额外处理。
+
+    break 的原理是把结束的标签加到一个栈里，一旦执行accept break 语句就会生成跳转到exit标签的语句。
+
+    \section{动态检测除0}
+
+    在Binary 生成除法操作之前，调用tr.genDivZeroCheck(right.val)。这是我新添加的一个辅助函数，会生成一段代码检测是否传入的值为0。
+
+    \end{document}
