@@ -194,6 +194,7 @@ Stmt		    :	VariableDef
                 		}
                 	}
                 |	IfStmt
+                |   GuardedStmt
                 |	WhileStmt
                 |	ForStmt
                 |	ReturnStmt ';'
@@ -201,6 +202,42 @@ Stmt		    :	VariableDef
                 |	PrintStmt ';'
                 |	BreakStmt ';'
                 |	StmtBlock
+                ;
+
+GuardedStmt     :   IF '{' Guards '}'
+                    {
+                        $$.stmt = new Tree.Guards($3.glist, $3.loc);
+                    }
+                ;
+
+Guards          :   Guard NextGuard
+                    {
+                        $$.glist = new ArrayList<Tree.Guard>();
+						$$.glist.add($1.guard);
+						$$.glist.addAll($2.glist);
+                    }
+                |   /* empty */
+                    {
+                        $$.glist = new ArrayList<Tree.Guard>();
+                    }
+                ;
+
+NextGuard 		:	GUARD_SPLIT Guard NextGuard
+                    {
+                        $$.glist = new ArrayList<Tree.Guard>();
+                        $$.glist.add($2.guard);
+                        $$.glist.addAll($3.glist);
+                    }
+                |   /* empty */
+                    {
+                        $$.glist = new ArrayList<Tree.Guard>();
+                    }
+                ;
+
+Guard           :   Expr ':' Stmt
+                    {
+                        $$.guard = new Tree.Guard($1.expr, $3.stmt, $1.loc);
+                    }
                 ;
 
 ScopyStmt         :   SCOPY '(' IDENTIFIER ',' Expr ')'

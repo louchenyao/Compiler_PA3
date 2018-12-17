@@ -161,6 +161,22 @@ public class TransPass2 extends Tree.Visitor {
 	}
 
 	@Override
+	public void visitGuards(Tree.Guards guards) {
+		for (Tree.Guard g: guards.glist) {
+			g.accept(this);
+		}
+	}
+
+	@Override
+	public void visitGuard(Tree.Guard guard) {
+		guard.expr.accept(this);
+		Label exit = Label.createLabel();
+		tr.genBeqz(guard.expr.val, exit);
+		guard.stmt.accept(this);
+		tr.genMark(exit);
+	}
+
+	@Override
 	public void visitExec(Tree.Exec exec) {
 		exec.expr.accept(this);
 	}

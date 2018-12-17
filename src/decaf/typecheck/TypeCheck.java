@@ -104,6 +104,19 @@ public class TypeCheck extends Tree.Visitor {
 	}
 
 	@Override
+	public void visitGuards(Tree.Guards guards) {
+		for (Tree.Guard g: guards.glist) {
+			g.accept(this);
+		}
+	}
+
+	@Override
+	public void visitGuard(Tree.Guard guard) {
+		checkTestExpr(guard.expr);
+		guard.stmt.accept(this);
+	}
+
+	@Override
 	public void visitNull(Tree.Null nullExpr) {
 		nullExpr.type = BaseType.NULL;
 	}

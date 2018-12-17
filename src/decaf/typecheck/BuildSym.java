@@ -210,6 +210,19 @@ public class BuildSym extends Tree.Visitor {
 	}
 
 	@Override
+	public void visitGuards(Tree.Guards guards) {
+		for (Tree.Guard g: guards.glist) {
+			g.accept(this);
+		}
+	}
+
+	@Override
+	public void visitGuard(Tree.Guard guard) {
+		guard.expr.accept(this);
+		guard.stmt.accept(this);
+	}
+
+	@Override
 	public void visitScopy(Tree.Scopy scopy) {
 		scopy.id_symbol = (Variable) table.lookup(scopy.id, true);
 	}

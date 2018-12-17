@@ -251,10 +251,14 @@ public abstract class Tree {
 
     public static final int SCOPY = ERRONEOUS + 1;
 
+    public static final int GUARD = SCOPY + 1;
+
+    public static final int GUARDS = GUARD + 1;
+
     /**
      * Unary operators, of type Unary.
      */
-    public static final int POS = SCOPY + 1;
+    public static final int POS = GUARDS + 1;
     public static final int NEG = POS + 1;
     public static final int NOT = NEG + 1;
     public static final int COMPL = NOT + 1;
@@ -1374,6 +1378,69 @@ public abstract class Tree {
             pw.decIndent();
         }
     }
+    /**
+     * guard statement
+     */
+    public static class Guard extends Tree {
+
+        public Expr expr;
+        public Tree stmt;
+
+        public Guard(Expr expr, Tree stmt, Location loc) {
+            super(GUARD, loc);
+            this.expr = expr;
+            this.stmt = stmt;
+        }
+
+        @Override
+        public void accept(Visitor v) {
+            v.visitGuard(this);
+        }
+
+        @Override
+        public void printTo(IndentPrintWriter pw) {
+            pw.println("guard");
+            pw.incIndent();
+            expr.printTo(pw);
+            stmt.printTo(pw);
+            pw.decIndent();
+        }
+    }
+
+    /**
+     * guards statement
+     */
+    public static class Guards extends Tree {
+
+        public List<Guard> glist;
+
+        public Guards(List<Guard> glist, Location loc) {
+            super(GUARDS, loc);
+            this.glist = glist;
+        }
+
+        @Override
+        public void accept(Visitor v) {
+            v.visitGuards(this);
+        }
+
+        @Override
+        public void printTo(IndentPrintWriter pw) {
+
+
+            pw.println("guarded");
+            pw.incIndent();
+            if (glist.isEmpty()) {
+                pw.println("<empty>");
+            } else {
+                for (Guard g: glist) {
+                    g.printTo(pw);
+                }
+            }
+            pw.decIndent();
+        }
+    }
+
 
     /**
       * A generic visitor class for trees.
@@ -1385,6 +1452,14 @@ public abstract class Tree {
         }
 
         public void visitScopy(Scopy that) {
+            visitTree(that);
+        }
+
+        public void visitGuard(Guard that) {
+            visitTree(that);
+        }
+
+        public void visitGuards(Guards that) {
             visitTree(that);
         }
 
