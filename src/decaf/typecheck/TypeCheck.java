@@ -81,6 +81,31 @@ public class TypeCheck extends Tree.Visitor {
 	}
 
 	@Override
+	public void visitForeachLoop(Tree.ForeachLoop foreachStmt) {
+		foreachStmt.array.accept(this);
+		if (!foreachStmt.array.type.equal(BaseType.ERROR)) { // if it's error, we can't do anything
+			if (!foreachStmt.array.type.isArrayType()) {
+				issueError(new BadArrOperArgError(foreachStmt.array.getLocation()));
+			}
+			if (foreachStmt.isVar && foreachStmt.array.type.isArrayType()) {
+				table.open(foreachStmt.loopBody.associatedScope);
+				Type ele_type = ((ArrayType) foreachStmt.array.type).getElementType();
+				foreachStmt.i_sym = new Variable(foreachStmt.varbind, ele_type, foreachStmt.loc);
+				table.declare(foreachStmt.i_sym);
+				table.close();
+			}
+			// 助教说不会有这种情况： int a in (String[])
+		}
+		table.open(foreachStmt.loopBody.associatedScope);
+		checkTestExpr(foreachStmt.cond);
+		table.close();
+
+		breaks.add(foreachStmt);
+		foreachStmt.loopBody.accept(this);
+		breaks.pop();
+	}
+
+	@Override
 	public void visitGuards(Tree.Guards guards) {
 		for (Tree.Guard g: guards.glist) {
 			g.accept(this);

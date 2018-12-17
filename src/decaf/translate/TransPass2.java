@@ -392,6 +392,48 @@ public class TransPass2 extends Tree.Visitor {
 	}
 
 	@Override
+	public void visitForeachLoop(Tree.ForeachLoop foreach) {
+
+		Temp t = Temp.createTempI4();
+		t.sym = foreach.i_sym;
+		foreach.i_sym.setTemp(t);
+
+		foreach.array.accept(this);
+
+		Temp arr = tr.genLoadImm4(0);
+		tr.genAssign(arr, foreach.array.val);
+		Temp length = tr.genLoad(arr, -OffsetCounter.WORD_SIZE);
+		Temp unit = tr.genLoadImm4(OffsetCounter.WORD_SIZE);
+		Temp remain = tr.genAdd(unit, tr.genMul(unit, length));
+
+		Label loop = Label.createLabel();
+		Label exit = Label.createLabel();
+		Label clean = Label.createLabel();
+
+		loopExits.push(exit);
+
+		tr.genMark(loop);
+
+		tr.genAssign(remain, tr.genSub(remain, unit));
+		tr.genBeqz(remain, clean);
+
+		tr.genAssign(t, tr.genLoad(arr, 0));
+		tr.genAssign(arr ,tr.genAdd(arr, unit));
+
+		if (foreach.cond != null) {
+			foreach.cond.accept(this);
+			tr.genBeqz(foreach.cond.val, clean);
+		}
+
+		foreach.loopBody.accept(this);
+
+		tr.genBranch(loop);
+		tr.genMark(clean);
+		loopExits.pop();
+		tr.genMark(exit);
+	}
+
+	@Override
 	public void visitIf(Tree.If ifStmt) {
 		ifStmt.condition.accept(this);
 		if (ifStmt.falseBranch != null) {

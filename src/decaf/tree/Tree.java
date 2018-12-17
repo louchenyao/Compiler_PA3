@@ -6,6 +6,7 @@
  */
 package decaf.tree;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import decaf.*;
@@ -255,10 +256,12 @@ public abstract class Tree {
 
     public static final int GUARDS = GUARD + 1;
 
+    public static final int FOREACHLOOP = GUARDS + 1;
+
     /**
      * Unary operators, of type Unary.
      */
-    public static final int POS = GUARDS + 1;
+    public static final int POS = FOREACHLOOP + 1;
     public static final int NEG = POS + 1;
     public static final int NOT = NEG + 1;
     public static final int COMPL = NOT + 1;
@@ -1454,7 +1457,56 @@ public abstract class Tree {
             pw.decIndent();
         }
     }
-
+    public static class ForeachLoop extends Tree {
+        public boolean isVar;
+        public TypeLiteral type;
+        public String varbind;
+        public Expr array;
+        public Expr cond;
+        public Block loopBody;
+        public Variable i_sym;
+        public ForeachLoop(boolean isVar, TypeLiteral type, String varbind, Expr array, Expr cond,
+                           Tree loopBody, Location loc) {
+            super(FOREACHLOOP, loc);
+            this.isVar = isVar;
+            this.type = type;
+            this.varbind = varbind;
+            this.array = array;
+            if (loopBody instanceof Block) {
+                this.loopBody = (Block) loopBody;
+            } else {
+                List<Tree> l = new ArrayList<>();
+                if (loopBody != null) l.add(loopBody);
+                this.loopBody = new Block(l, loopBody.loc);
+            }
+            if (cond == null) {
+                cond = new Literal(BOOL, true, loc);
+            }
+            this.cond = cond;
+        }
+        @Override
+        public void accept(Visitor v) {
+            v.visitForeachLoop(this);
+        }
+        @Override
+        public void printTo(IndentPrintWriter pw) {
+            pw.println("foreach");
+            pw.incIndent();
+            pw.print("varbind " + varbind + " " );
+            if (isVar) {
+                pw.println("var");
+            } else {
+                type.printTo(pw);
+                pw.println("");
+            }
+            array.printTo(pw);
+            cond.printTo(pw);
+            if (loopBody != null) {
+                loopBody.printTo(pw);
+            }
+            pw.decIndent();
+        }
+    }
 
     /**
       * A generic visitor class for trees.
@@ -1463,6 +1515,10 @@ public abstract class Tree {
 
         public Visitor() {
             super();
+        }
+
+        public void visitForeachLoop(ForeachLoop that) {
+            visitTree(that);
         }
 
         public void visitScopy(Scopy that) {

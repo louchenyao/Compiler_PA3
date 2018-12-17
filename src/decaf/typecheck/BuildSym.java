@@ -230,12 +230,34 @@ public class BuildSym extends Tree.Visitor {
 	// for VarDecl in LocalScope
 	@Override
 	public void visitBlock(Tree.Block block) {
-		block.associatedScope = new LocalScope(block);
+		if (block.associatedScope == null) block.associatedScope = new LocalScope(block);
 		table.open(block.associatedScope);
 		for (Tree s : block.block) {
 			s.accept(this);
 		}
 		table.close();
+	}
+	@Override
+	public void visitForeachLoop(Tree.ForeachLoop foreachStmt) {
+		// process type id/var id
+		foreachStmt.loopBody.associatedScope = new LocalScope(foreachStmt.loopBody);
+		table.open(foreachStmt.loopBody.associatedScope);
+		String name = foreachStmt.varbind;
+		if (foreachStmt.isVar) {
+			foreachStmt.i_sym = new Variable(name, BaseType.ERROR, foreachStmt.loc); // Use ERROR to avoid the sequential error
+		} else {
+			Tree.TypeLiteral t = foreachStmt.type;
+			t.accept(this);
+			if (t.type.equal(BaseType.VOID)) {
+				issueError(new BadVarTypeError(t.loc, name));
+				foreachStmt.i_sym = new Variable(name, BaseType.ERROR, t.loc);
+			} else {
+				foreachStmt.i_sym = new Variable(name, t.type, t.loc);
+			}
+		}
+		table.declare(foreachStmt.i_sym);
+		table.close();
+		foreachStmt.loopBody.accept(this);
 	}
 
 	@Override
