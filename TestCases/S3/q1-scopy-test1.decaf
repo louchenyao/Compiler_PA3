@@ -26,9 +26,14 @@ class Main {
 	static void main() {
 		class Father a;
 		class Father b;
+		a = new Father();
+		a.setfield(5);
+		a.seta(5);
 		b = new Father();
-		b.setfield(5);
+		b.setfield(10);
 		b.seta(10);
+		Print(b.getA());
+		Print(a.getA());
 		scopy(a,b);
 		Print(b.getA());
 		Print(a.getA());

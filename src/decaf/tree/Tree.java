@@ -249,10 +249,12 @@ public abstract class Tree {
      */
     public static final int ERRONEOUS = TYPEPARAMETER + 1;
 
+    public static final int SCOPY = ERRONEOUS + 1;
+
     /**
      * Unary operators, of type Unary.
      */
-    public static final int POS = ERRONEOUS + 1;
+    public static final int POS = SCOPY + 1;
     public static final int NEG = POS + 1;
     public static final int NOT = NEG + 1;
     public static final int COMPL = NOT + 1;
@@ -1343,12 +1345,47 @@ public abstract class Tree {
     }
 
     /**
+     * scopy statement
+     */
+    public static class Scopy extends Tree {
+
+        public String id;
+        public Variable id_symbol;
+
+        public Expr expr;
+
+        public Scopy(String id, Expr expr, Location loc) {
+            super(SCOPY, loc);
+            this.id = id;
+            this.expr = expr;
+        }
+
+        @Override
+        public void accept(Visitor v) {
+            v.visitScopy(this);
+        }
+
+        @Override
+        public void printTo(IndentPrintWriter pw) {
+            pw.println("scopy");
+            pw.incIndent();
+            pw.println(id);
+            expr.printTo(pw);
+            pw.decIndent();
+        }
+    }
+
+    /**
       * A generic visitor class for trees.
       */
     public static abstract class Visitor {
 
         public Visitor() {
             super();
+        }
+
+        public void visitScopy(Scopy that) {
+            visitTree(that);
         }
 
         public void visitTopLevel(TopLevel that) {

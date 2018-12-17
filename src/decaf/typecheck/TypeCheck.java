@@ -323,6 +323,11 @@ public class TypeCheck extends Tree.Visitor {
 	}
 
 	@Override
+	public  void visitScopy(Tree.Scopy scopy) {
+		scopy.expr.accept(this);
+	}
+
+	@Override
 	public void visitIdent(Tree.Ident ident) {
 		if (ident.owner == null) {
 			Symbol v = table.lookupBeforeLocation(ident.name, ident

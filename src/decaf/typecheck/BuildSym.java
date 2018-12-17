@@ -210,6 +210,11 @@ public class BuildSym extends Tree.Visitor {
 	}
 
 	@Override
+	public void visitScopy(Tree.Scopy scopy) {
+		scopy.id_symbol = (Variable) table.lookup(scopy.id, true);
+	}
+
+	@Override
 	public void visitForLoop(Tree.ForLoop forLoop) {
 		if (forLoop.loopBody != null) {
 			forLoop.loopBody.accept(this);
