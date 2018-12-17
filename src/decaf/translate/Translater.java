@@ -372,6 +372,19 @@ public class Translater {
 		genMark(exit);
 	}
 
+	public void genDivZeroCheck(Temp val) {
+		Label err = Label.createLabel();
+		Label exit = Label.createLabel();
+		genBeqz(val, err);
+		genBranch(exit);
+		genMark(err);
+		Temp msg = genLoadStrConst("Decaf runtime error: Division by zero error.");
+		genParm(msg);
+		genIntrinsicCall(Intrinsic.PRINT_STRING);
+		genIntrinsicCall(Intrinsic.HALT);
+		genMark(exit);
+	}
+
 	public Temp genNewArray(Temp length, Temp init_val) {
 		// Hack TA. Ta uses different errors in same situation.
 		if (init_val != null) {
