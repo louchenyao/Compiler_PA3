@@ -21,6 +21,7 @@ import decaf.tac.Temp;
 import decaf.tac.VTable;
 import decaf.type.BaseType;
 import decaf.type.Type;
+import decaf.type.ClassType;
 
 public class Translater {
 	private List<VTable> vtables;
@@ -386,18 +387,55 @@ public class Translater {
 		genStore(length, obj, 0);
 		Label loop = Label.createLabel();
 		Label exit = Label.createLabel();
-		if (init_val == null) {
-			init_val = genLoadImm4(0);
-		}
 		append(Tac.genAdd(obj, obj, size));
 		genMark(loop);
 		append(Tac.genSub(size, size, unit));
 		genBeqz(size, exit);
 		append(Tac.genSub(obj, obj, unit));
+
+		if (init_val == null) {
+			init_val = genLoadImm4(0);
+		} else {
+			if (init_val.sym != null && ((init_val.sym.getType()) instanceof ClassType)) {
+				init_val = genShallowCopy(init_val);
+			}
+		}
 		genStore(init_val, obj, 0);
 		genBranch(loop);
 		genMark(exit);
 		return obj;
+	}
+
+	public Temp genShallowCopy(Temp src) {
+		int size_int = ((ClassType) (((Symbol) src.sym).getType())).getSymbol().getSize();
+		Temp size = genLoadImm4(size_int);
+		genParm(size);
+		Temp newObj = genIntrinsicCall(Intrinsic.ALLOCATE);
+
+		int time = size_int/ OffsetCounter.WORD_SIZE - 1;
+		if (time != 0) {
+			Temp unit = genLoadImm4(OffsetCounter.WORD_SIZE);
+			Label loop = Label.createLabel();
+			Label exit = Label.createLabel();
+
+			newObj = genAdd(newObj, size);
+			src = genAdd(src, size);
+
+			genMark(loop);
+			genAssign(newObj, genSub(newObj, unit));
+			genAssign(src, genSub(src, unit));
+			genAssign(size, genSub(size, unit));
+
+			// copy
+			Temp tmp = genLoad(src, 0);
+			genStore(tmp, newObj, 0);
+			genBeqz(size, exit);
+
+			genBranch(loop);
+			genMark(exit);
+		}
+
+		return newObj;
 	}
 
 	public void genNewForClass(Class c) {

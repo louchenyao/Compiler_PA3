@@ -212,7 +212,7 @@ public class TransPass2 extends Tree.Visitor {
 	@Override
 	public void visitScopy(Tree.Scopy scopy) {
 		scopy.expr.accept(this);
-	    tr.genAssign(scopy.id_symbol.getTemp(), scopy.expr.val);
+	    tr.genAssign(scopy.id_symbol.getTemp(), tr.genShallowCopy(scopy.expr.val));
 	}
 
 	@Override
