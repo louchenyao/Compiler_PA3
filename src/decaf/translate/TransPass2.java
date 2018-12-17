@@ -410,29 +410,28 @@ public class TransPass2 extends Tree.Visitor {
 
 		Label loop = Label.createLabel();
 		Label exit = Label.createLabel();
-		Label clean = Label.createLabel();
 
 		loopExits.push(exit);
 
 		tr.genMark(loop);
 
 		tr.genAssign(remain, tr.genSub(remain, unit));
-		tr.genBeqz(remain, clean);
+		tr.genBeqz(remain, exit);
 
 		tr.genAssign(t, tr.genLoad(arr, 0));
 		tr.genAssign(arr ,tr.genAdd(arr, unit));
 
 		if (foreach.cond != null) {
 			foreach.cond.accept(this);
-			tr.genBeqz(foreach.cond.val, clean);
+			tr.genBeqz(foreach.cond.val, exit);
 		}
 
 		foreach.loopBody.accept(this);
 
 		tr.genBranch(loop);
-		tr.genMark(clean);
-		loopExits.pop();
 		tr.genMark(exit);
+
+		loopExits.pop();
 	}
 
 	@Override
