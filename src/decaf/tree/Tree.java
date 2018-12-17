@@ -1155,28 +1155,36 @@ public abstract class Tree {
       */
     public static class Indexed extends LValue {
 
-    	public Expr array;
-    	public Expr index;
+        public Expr array;
+        public Expr index;
+        public Expr default_;
 
-        public Indexed(Expr array, Expr index, Location loc) {
+        public Indexed(Expr array, Expr index, Expr default_, Location loc) {
             super(INDEXED, loc);
-    		this.array = array;
-    		this.index = index;
+            this.array = array;
+            this.index = index;
+            this.default_ = default_;
         }
 
-    	@Override
+        @Override
         public void accept(Visitor v) {
             v.visitIndexed(this);
         }
 
-    	@Override
-    	public void printTo(IndentPrintWriter pw) {
-    		pw.println("arrref");
-    		pw.incIndent();
-    		array.printTo(pw);
-    		index.printTo(pw);
-    		pw.decIndent();
-    	}
+        @Override
+        public void printTo(IndentPrintWriter pw) {
+            pw.println("arrref");
+            pw.incIndent();
+            array.printTo(pw);
+            index.printTo(pw);
+            if (default_ != null) {
+                pw.println("default");
+                pw.incIndent();
+                default_.printTo(pw);
+                pw.decIndent();
+            }
+            pw.decIndent();
+        }
     }
 
     /**

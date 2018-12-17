@@ -280,7 +280,7 @@ LValue          :	VAR IDENTIFIER
 					}
                 |	Expr '[' Expr ']'
                 	{
-                		$$.lvalue = new Tree.Indexed($1.expr, $3.expr, $1.loc);
+                		$$.lvalue = new Tree.Indexed($1.expr, $3.expr, null, $1.loc);
                 	}
                 ;
 
@@ -367,6 +367,10 @@ Expr            :	LValue
                 	{
                 		$$.expr = new Tree.Unary(Tree.NOT, $2.expr, $1.loc);
                 	}
+                |   Expr '[' Expr ']' DEFAULT Expr
+                    {
+                        $$.expr = new Tree.Indexed($1.expr, $3.expr, $6.expr, $1.loc);
+                    }
                 |	READ_INTEGER '(' ')'
                 	{
                 		$$.expr = new Tree.ReadIntExpr($1.loc);

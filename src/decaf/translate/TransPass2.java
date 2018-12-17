@@ -260,12 +260,38 @@ public class TransPass2 extends Tree.Visitor {
 	public void visitIndexed(Tree.Indexed indexed) {
 		indexed.array.accept(this);
 		indexed.index.accept(this);
-		tr.genCheckArrayIndex(indexed.array.val, indexed.index.val);
-		
-		Temp esz = tr.genLoadImm4(OffsetCounter.WORD_SIZE);
-		Temp t = tr.genMul(indexed.index.val, esz);
-		Temp base = tr.genAdd(indexed.array.val, t);
-		indexed.val = tr.genLoad(base, 0);
+		if (indexed.default_ == null) {
+			tr.genCheckArrayIndex(indexed.array.val, indexed.index.val);
+
+			Temp esz = tr.genLoadImm4(OffsetCounter.WORD_SIZE);
+			Temp t = tr.genMul(indexed.index.val, esz);
+			Temp base = tr.genAdd(indexed.array.val, t);
+			indexed.val = tr.genLoad(base, 0);
+		} else {
+			indexed.default_.accept(this);
+			Temp length = tr.genLoad(indexed.array.val, -OffsetCounter.WORD_SIZE);
+			Temp cond = tr.genLes(indexed.index.val, length);
+			Temp res = tr.genLoadImm4(0);
+
+			Label def = Label.createLabel();
+			Label exit = Label.createLabel();
+
+			tr.genBeqz(cond, def);
+			// { not out of bound
+				Temp esz = tr.genLoadImm4(OffsetCounter.WORD_SIZE);
+				Temp t = tr.genMul(indexed.index.val, esz);
+				Temp base = tr.genAdd(indexed.array.val, t);
+				tr.genAssign(res, tr.genLoad(base, 0));
+			// }
+			tr.genBranch(exit);
+			tr.genMark(def);
+			// { out of bound
+				tr.genAssign(res, indexed.default_.val);
+			// }
+			tr.genMark(exit);
+			indexed.val = res;
+		}
+
 	}
 
 	@Override
