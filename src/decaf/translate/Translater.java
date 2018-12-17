@@ -360,19 +360,25 @@ public class Translater {
 		genMark(exit);
 	}
 
-	public void genCheckNewArraySize(Temp size) {
+	public void genCheckNewArraySize(Temp size, String err_msg) {
 		Label exit = Label.createLabel();
 		Temp cond = genLes(size, genLoadImm4(0));
 		genBeqz(cond, exit);
-		Temp msg = genLoadStrConst(RuntimeError.NEGATIVE_ARR_SIZE);
+		Temp msg = genLoadStrConst(err_msg);
 		genParm(msg);
 		genIntrinsicCall(Intrinsic.PRINT_STRING);
 		genIntrinsicCall(Intrinsic.HALT);
 		genMark(exit);
 	}
 
-	public Temp genNewArray(Temp length) {
-		genCheckNewArraySize(length);
+	public Temp genNewArray(Temp length, Temp init_val) {
+		// Hack TA. Ta uses different errors in same situation.
+		if (init_val != null) {
+			genCheckNewArraySize(length, "Decaf runtime error: The length of the created array should not be less than 0.");
+		} else {
+			genCheckNewArraySize(length, RuntimeError.NEGATIVE_ARR_SIZE);
+		}
+
 		Temp unit = genLoadImm4(OffsetCounter.WORD_SIZE);
 		Temp size = genAdd(unit, genMul(unit, length));
 		genParm(size);
@@ -380,13 +386,15 @@ public class Translater {
 		genStore(length, obj, 0);
 		Label loop = Label.createLabel();
 		Label exit = Label.createLabel();
-		Temp zero = genLoadImm4(0);
+		if (init_val == null) {
+			init_val = genLoadImm4(0);
+		}
 		append(Tac.genAdd(obj, obj, size));
 		genMark(loop);
 		append(Tac.genSub(size, size, unit));
 		genBeqz(size, exit);
 		append(Tac.genSub(obj, obj, unit));
-		genStore(zero, obj, 0);
+		genStore(init_val, obj, 0);
 		genBranch(loop);
 		genMark(exit);
 		return obj;

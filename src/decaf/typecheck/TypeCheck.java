@@ -660,6 +660,13 @@ public class TypeCheck extends Tree.Visitor {
 					&& right.type.equal(BaseType.BOOL);
 			returnType = BaseType.BOOL;
 			break;
+		case Tree.REPEAT:
+			if (left.type.equal(BaseType.UNKNOWN) || left.type.equal(BaseType.VOID)) {
+				issueError(new BadArrElementError(left.loc));
+				return BaseType.ERROR;
+			} else {
+				return new ArrayType(left.type);
+			}
 		default:
 			break;
 		}

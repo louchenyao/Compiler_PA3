@@ -299,6 +299,10 @@ Expr            :	LValue
 					}
                 |	Call
                 |	Constant
+                |   Expr REPEAT Expr
+                    {
+                        $$.expr = new Tree.Binary(Tree.REPEAT, $1.expr, $3.expr, $1.loc);
+                    }
                 |	Expr '+' Expr
                 	{
                 		$$.expr = new Tree.Binary(Tree.PLUS, $1.expr, $3.expr, $2.loc);

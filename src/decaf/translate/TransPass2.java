@@ -100,6 +100,9 @@ public class TransPass2 extends Tree.Visitor {
 		case Tree.NE:
 			genEquNeq(expr);
 			break;
+		case Tree.REPEAT:
+			expr.val = tr.genNewArray(expr.right.val, expr.left.val);
+			break;
 		}
 	}
 
@@ -387,7 +390,7 @@ public class TransPass2 extends Tree.Visitor {
 	@Override
 	public void visitNewArray(Tree.NewArray newArray) {
 		newArray.length.accept(this);
-		newArray.val = tr.genNewArray(newArray.length.val);
+		newArray.val = tr.genNewArray(newArray.length.val, null);
 	}
 
 	@Override
