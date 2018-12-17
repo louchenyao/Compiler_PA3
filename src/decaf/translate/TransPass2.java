@@ -139,6 +139,7 @@ public class TransPass2 extends Tree.Visitor {
 					.getOffset());
 			break;
 		case PARAM_VAR:
+		case UNKNOWN_VAR:
 		case LOCAL_VAR:
 			tr.genAssign(((Tree.Ident) assign.left).symbol.getTemp(),
 					assign.expr.val);
@@ -274,7 +275,25 @@ public class TransPass2 extends Tree.Visitor {
 		case MEMBER_VAR:
 			ident.val = tr.genLoad(ident.owner.val, ident.symbol.getOffset());
 			break;
+		case UNKNOWN_VAR:
+			Temp t = Temp.createTempI4();
+			t.sym = ident.symbol;
+			ident.symbol.setTemp(t);
+
+//			System.out.println("visitIdent: UNKNOWN_VAR ====");
+//			System.out.println(ident.symbol);
+//			System.out.println(ident.symbol.getTemp());
+//			System.out.println("===============");
+
+			ident.val = t;
+			break;
 		default:
+//			if (ident.name.equals("c")) {
+//				System.out.println("visitIdent: default ====");
+//				System.out.println(ident.symbol);
+//				System.out.println(ident.symbol.getTemp());
+//				System.out.println("===============");
+//			}
 			ident.val = ident.symbol.getTemp();
 			break;
 		}

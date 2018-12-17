@@ -845,7 +845,7 @@ public abstract class Tree {
     public abstract static class LValue extends Expr {
 
     	public enum Kind {
-    		LOCAL_VAR, PARAM_VAR, MEMBER_VAR, ARRAY_ELEMENT
+    		LOCAL_VAR, PARAM_VAR, MEMBER_VAR, ARRAY_ELEMENT, UNKNOWN_VAR
     	}
     	public Kind lvKind;
     	
@@ -1180,31 +1180,33 @@ public abstract class Tree {
       */
     public static class Ident extends LValue {
 
-    	public Expr owner;
-    	public String name;
-    	public Variable symbol;
-    	public boolean isDefined;
+        public Expr owner;
+        public String name;
+        public Variable symbol;
+        public boolean isDefined;
+        public boolean var;
 
-        public Ident(Expr owner, String name, Location loc) {
+        public Ident(boolean var, Expr owner, String name, Location loc) {
             super(IDENT, loc);
-    		this.owner = owner;
-    		this.name = name;
+            this.owner = owner;
+            this.name = name;
+            this.var = var;
         }
 
-    	@Override
+        @Override
         public void accept(Visitor v) {
             v.visitIdent(this);
         }
 
-    	@Override
-    	public void printTo(IndentPrintWriter pw) {
-    		pw.println("varref " + name);
-    		if (owner != null) {
-    			pw.incIndent();
-    			owner.printTo(pw);
-    			pw.decIndent();
-    		}
-    	}
+        @Override
+        public void printTo(IndentPrintWriter pw) {
+            pw.println((var ? "var ": "varref ") + name);
+            if (owner != null) {
+                pw.incIndent();
+                owner.printTo(pw);
+                pw.decIndent();
+            }
+        }
     }
 
     /**

@@ -267,9 +267,13 @@ Receiver     	:	Expr '.'
                 	}
                 ;
 
-LValue          :	Receiver IDENTIFIER
+LValue          :	VAR IDENTIFIER
+                    {
+                        $$.lvalue = new Tree.Ident(true, null, $2.ident, $2.loc);
+                    }
+                |   Receiver IDENTIFIER
 					{
-						$$.lvalue = new Tree.Ident($1.expr, $2.ident, $2.loc);
+						$$.lvalue = new Tree.Ident(false, $1.expr, $2.ident, $2.loc);
 						if ($1.loc == null) {
 							$$.loc = $2.loc;
 						}
